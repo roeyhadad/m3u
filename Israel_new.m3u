@@ -1,0 +1,28 @@
+#EXTM3U
+
+#EXTINF:-1 tvg-logo="http://img.bizportal.co.il/giflib/news/rsPhoto/sz_177/rsz_615_346_ahadashot615_021117.jpg" group-title="Hebrew",ערוץ 12
+http://ch2live-i.akamaihd.net/hls/live/252343/252343/playlist.m3u8
+#EXTINF:-1  tvg-logo="http://www.isramedia.net/images/users/2/0e6b040fd7318b2f62c56368490fda4f.png" group-title="Hebrew",ערוץ 13
+http://nana10-hdl-il-sw.ctedgecdn.net/Nana10-Live/amlst:hd_,500,1000,1200,2400,/playlist.m3u8
+
+
+#EXTINF:-1 tvg-id="" tvg-name="" tvg-logo="http://ausraelim.com.au/wp-content/uploads/2013/10/channel10.jpg" group-title="Hebrew",ערוץ 13
+http://nana10-hdl-il-sw.ctedgecdn.net/Nana10-Live/amlst:hd_,500,1000,1200,2400,/playlist.m3u8
+ 
+#EXTINF:-1 tvg-id="" tvg-name="" tvg-logo="http://ausraelim.com.au/wp-content/uploads/2013/10/channel10.jpg" group-title="Hebrew",ערוץ 13
+http://nana10-hdl-il.ctedgecdn.net/Nana10-Live/amlst:hd_,1000,1500,1800,/playlist.m3u8
+ 
+#EXTINF:-1 tvg-id="" tvg-name="" tvg-logo="http://ausraelim.com.au/wp-content/uploads/2013/10/channel10.jpg" group-title="Hebrew",ערוץ 13
+http://nana10-hdl-uk.ctedgecdn.net/Nana10-Live/amlst:hd_,500,1000,1200,2400,/playlist.m3u
+ 
+#EXTINF:-1 tvg-id="" tvg-name="" tvg-logo="http://ausraelim.com.au/wp-content/uploads/2013/10/channel10.jpg" group-title="Hebrew",ערוץ 13
+http://nana10-hdl-uk.ctedgecdn.net/Nana10-Live/amlst:hd_,1000,1500,1800,/playlist.m3u8
+
+
+#EXTINF:-1 tvg-id="" tvg-name="" tvg-logo="http://thumbs2.imagebam.com/ec/75/53/eb02a3784877443.jpg" group-title="Hebrew",ch 24
+http://keshethlslive-lh.akamaihd.net/i/24live_1@195271/index_2200_av-b.m3u8?sd=10&rebase=on&hdntl=exp=1521305784~acl=%2f*~data=hdntl~hmac=0b04f206fb1bb2004ae6ab7c02a951d97bfdd220397c0516bb6057206493c8ea|User-Agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/43.0.2357.130 Chrome/43.0.2357.130 Safari/537.36&Cookie=hdntl%3Dexp%3D1521305784%7Eacl%3D%252f%2A%7Edata%3Dhdntl%7Ehmac%3D0b04f206fb1bb2004ae6ab7c02a951d97bfdd220397c0516bb6057206493c8ea;_alid_%3DYrk%2B1GiREjTrEWpIW8Vc7Q%3D%3D
+
+
+
+
+
