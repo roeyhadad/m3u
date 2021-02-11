@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ConsentText</key>
+	<dict>
+		<key>default</key>
+		<string>Leumi APN Installation. Created By EBDev Team (c)</string>
+	</dict>
+	<key>PayloadContent</key>
+	<array>
+		<dict>
+			<key>APNs</key>
+			<array>
+				<dict>
+					<key>Name</key>
+					<string>org.pelephone.net.il</string>
+					<key>AuthenticationType</key>
+					<string>PAP</string>
+					<key>Password</key>
+					<string>pcl</string>
+					<key>Username</key>
+					<string>pcl@rsingle</string>
+				</dict>
+			</array>
+			<key>PayloadDescription</key>
+			<string>Configures a custom APN.</string>
+			<key>PayloadDisplayName</key>
+			<string>EBDev</string>
+			<key>PayloadIdentifier</key>
+			<string>com.apple.cellular.629F5E50-829A-4304-860C-71FB717CE46D</string>
+			<key>PayloadType</key>
+			<string>com.apple.cellular</string>
+			<key>PayloadUUID</key>
+			<string>629F5E50-829A-4304-860C-71FB717CE46D</string>
+			<key>PayloadVersion</key>
+			<real>1</real>
+		</dict>
+	</array>
+	<key>PayloadDescription</key>
+	<string>Connection profile for Leumi Dev environment</string>
+	<key>PayloadDisplayName</key>
+	<string>Leumi APN</string>
+	<key>PayloadIdentifier</key>
+	<string>EBDev</string>
+	<key>PayloadOrganization</key>
+	<string>Bank Leumi LTD</string>
+	<key>PayloadRemovalDisallowed</key>
+	<false/>
+	<key>PayloadType</key>
+	<string>Configuration</string>
+	<key>PayloadUUID</key>
+	<string>CC22CE99-612D-468B-8C2E-6D3874665B57</string>
+	<key>PayloadVersion</key>
+	<integer>1</integer>
+</dict>
+</plist>
