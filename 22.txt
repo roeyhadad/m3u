@@ -1,19 +1,9 @@
-Option Explicit
-
-Dim WithEvents objInspectors As Outlook.Inspectors
-Dim g_AutoApprovalInProgress As Boolean
-
-Private Sub Application_Startup()
-    Set objInspectors = Application.Inspectors
-End Sub
-
 Private Sub Application_NewMailEx(ByVal EntryIDCollection As String)
     Dim arrIDs() As String
     Dim i As Long
     Dim itm As Object
     Dim mail As Outlook.MailItem
 
-    ' מפצל במקרה שמגיעים כמה מיילים יחד
     arrIDs = Split(EntryIDCollection, ",")
 
     For i = LBound(arrIDs) To UBound(arrIDs)
@@ -21,10 +11,19 @@ Private Sub Application_NewMailEx(ByVal EntryIDCollection As String)
         If TypeOf itm Is Outlook.MailItem Then
             Set mail = itm
 
-            ' *** דיבוג: לראות שהמאקרו בכלל רץ ***
-            MsgBox "הגיע מייל חדש: " & mail.Subject, vbInformation, "NewMailEx"
+            ' נבדוק רק על המיילים שמעניינים אותנו
+            If InStr(mail.Body, "לאישור הבקשה") > 0 And _
+               InStr(mail.Body, "גיל בדוסה") > 0 Then
 
-            ' פה בהמשך נוסיף את התנאים
+                MsgBox "זוהה מייל מתאים: " & mail.Subject, vbInformation, "Match"
+
+                g_AutoApprovalInProgress = True
+                mail.Display
+                ClickApprovalLink mail
+            Else
+                ' דיבוג – לראות למה לא נכנס:
+                'MsgBox "מייל לא מתאים: " & mail.Subject, vbInformation, "No Match"
+            End If
         End If
     Next i
 End Sub
