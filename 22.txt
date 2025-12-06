@@ -14,11 +14,16 @@ Private Sub Application_NewMailEx(ByVal EntryIDCollection As String)
         If TypeOf itm Is Outlook.MailItem Then
             Set mail = itm
 
-            ' כאן בוחרים איזה מיילים יאושרו אוטומטית
-            ' בדוגמה: כל מייל שהנושא שלו מכיל CHG
+            ' TODO: לסנן רק את המיילים שאתה רוצה:
+            ' כרגע – כל מייל שה-Subject שלו מכיל CHG
             If InStr(mail.Subject, "CHG") > 0 Then
-                mail.Display                ' פותח את המייל
-                ApproveChange mail          ' לוחץ על הלינק ושולח
+
+                ' דיבוג – פעם ראשונה כדאי להשאיר:
+                'MsgBox "זוהה מייל לאישור: " & mail.Subject, vbInformation, "Debug"
+
+                mail.Display
+                DoEvents
+                Call ApproveChange(mail)
             End If
         End If
     Next i
@@ -30,33 +35,50 @@ Private Sub ApproveChange(ByVal mail As Outlook.MailItem)
     Dim countLinks As Long
     Dim insp As Outlook.Inspector
     Dim replyMail As Outlook.MailItem
+    Dim t As Single
 
     On Error GoTo ExitPoint
 
-    ' להגיע ללינקים במייל
+    ' ניגשים ללינקים במייל
     Set doc = mail.GetInspector.WordEditor
     Set links = doc.Hyperlinks
     countLinks = links.Count
 
-    ' נניח שהלינק השני מתוך שלושה הוא "לאישור הבקשה"
-    If countLinks >= 2 Then
-        links(2).Follow      ' לוחץ על "לאישור הבקשה"
-        DoEvents             ' נותן לחלון החדש להיפתח
+    ' דיבוג – לראות כמה לינקים יש
+    'MsgBox "נמצאו " & countLinks & " לינקים במייל", vbInformation, "Debug-Links"
 
+    If countLinks < 2 Then GoTo ExitPoint   ' אין לינק שני – אין מה לעשות
+
+    ' לוחצים על הלינק האמצעי – "לאישור הבקשה"
+    links(2).Follow
+
+    ' מחכים לחלון המייל החדש
+    t = Timer
+    Do
+        DoEvents
         Set insp = Application.ActiveInspector
         If Not insp Is Nothing Then
             If TypeOf insp.CurrentItem Is Outlook.MailItem Then
                 Set replyMail = insp.CurrentItem
-
-                ' ביטחון: לוודא שזה באמת מייל האישור
-                If InStr(replyMail.Subject, "CHG") > 0 _
-                   And InStr(replyMail.Subject, "approve") > 0 _
-                   And InStr(replyMail.To, "Auto_SN") > 0 Then
-
-                    replyMail.Send   ' שליחה אוטומטית
-                End If
+                Exit Do
             End If
         End If
+    Loop While Timer < t + 5   ' עד 5 שניות המתנה
+
+    If replyMail Is Nothing Then GoTo ExitPoint
+
+    ' דיבוג – לראות שזה באמת המייל הנכון
+    'MsgBox "נפתח מייל חדש:" & vbCrLf & _
+    '       "Subject: " & replyMail.Subject & vbCrLf & _
+    '       "To: " & replyMail.To, vbInformation, "Debug-Reply"
+
+    ' לוודא שזה באמת מייל האישור לפני שליחה
+    If InStr(replyMail.Subject, "CHG") > 0 _
+       And InStr(replyMail.Subject, "approve") > 0 _
+       And InStr(replyMail.To, "Auto_SN") > 0 _
+       And InStr(replyMail.Body, "Ref:MSG") > 0 Then
+
+        replyMail.Send
     End If
 
 ExitPoint:
