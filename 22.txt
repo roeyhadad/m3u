@@ -1,0 +1,30 @@
+Option Explicit
+
+Dim WithEvents objInspectors As Outlook.Inspectors
+Dim g_AutoApprovalInProgress As Boolean
+
+Private Sub Application_Startup()
+    Set objInspectors = Application.Inspectors
+End Sub
+
+Private Sub Application_NewMailEx(ByVal EntryIDCollection As String)
+    Dim arrIDs() As String
+    Dim i As Long
+    Dim itm As Object
+    Dim mail As Outlook.MailItem
+
+    ' מפצל במקרה שמגיעים כמה מיילים יחד
+    arrIDs = Split(EntryIDCollection, ",")
+
+    For i = LBound(arrIDs) To UBound(arrIDs)
+        Set itm = Application.Session.GetItemFromID(arrIDs(i))
+        If TypeOf itm Is Outlook.MailItem Then
+            Set mail = itm
+
+            ' *** דיבוג: לראות שהמאקרו בכלל רץ ***
+            MsgBox "הגיע מייל חדש: " & mail.Subject, vbInformation, "NewMailEx"
+
+            ' פה בהמשך נוסיף את התנאים
+        End If
+    Next i
+End Sub
