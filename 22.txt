@@ -1,6 +1,6 @@
 Option Explicit
 
-' רץ על כל מייל חדש שנכנס
+' Runs on every new mail that arrives
 Private Sub Application_NewMailEx(ByVal EntryIDCollection As String)
     Dim arrIDs() As String
     Dim i As Long
@@ -14,14 +14,11 @@ Private Sub Application_NewMailEx(ByVal EntryIDCollection As String)
         If TypeOf itm Is Outlook.MailItem Then
             Set mail = itm
 
-            ' מסננים רק מיילים שיש בהם CHG בכותרת
+            ' Filter: only mails with CHG in the subject
             If InStr(mail.Subject, "CHG") > 0 Then
-                ' דיבוג – אם אתה רוצה לראות שזה רץ, בטל את ההערה:
-                'MsgBox "זוהה מייל לאישור: " & mail.Subject, vbInformation, "Debug"
-
                 mail.Display
                 DoEvents
-                Call ApproveChange(mail)
+                ApproveChange mail
             End If
         End If
     Next i
@@ -37,16 +34,19 @@ Private Sub ApproveChange(ByVal mail As Outlook.MailItem)
 
     On Error GoTo ExitPoint
 
+    ' Get hyperlinks in the mail
     Set doc = mail.GetInspector.WordEditor
     Set links = doc.Hyperlinks
     countLinks = links.Count
 
-    If countLinks < 2 Then GoTo ExitPoint   ' צריך לפחות 2 לינקים
+    ' We expect at least 2 links, the 2nd is "לאישור הבקשה"
+    If countLinks < 2 Then GoTo ExitPoint
 
-    ' לוחץ על הלינק האמצעי – "לאישור הבקשה"
+    ' Click the second link ("Approve request")
     links(2).Follow
+    DoEvents
 
-    ' מחכה לחלון המייל החדש
+    ' Wait up to 5 seconds for the new mail window to become active
     t = Timer
     Do
         DoEvents
@@ -57,16 +57,10 @@ Private Sub ApproveChange(ByVal mail As Outlook.MailItem)
                 Exit Do
             End If
         End If
-    Loop While Timer < t + 5   ' עד 5 שניות המתנה
+    Loop While Timer < t + 5
 
-    If replyMail Is Nothing Then GoTo ExitPoint
-
-    ' לוודא שזה באמת מייל האישור לפני שליחה
-    If InStr(replyMail.Subject, "CHG") > 0 _
-       And InStr(replyMail.Subject, "approve") > 0 _
-       And InStr(replyMail.To, "Auto_SN") > 0 _
-       And InStr(replyMail.Body, "Ref:MSG") > 0 Then
-
+    ' If we got the new mail item – just send it
+    If Not replyMail Is Nothing Then
         replyMail.Send
     End If
 
