@@ -1,7 +1,6 @@
 Option Explicit
 
 Dim WithEvents objInspectors As Outlook.Inspectors
-Dim g_AutoApprovalInProgress As Boolean
 
 ' רץ כש-Outlook עולה
 Private Sub Application_Startup()
@@ -22,11 +21,11 @@ Private Sub Application_NewMailEx(ByVal EntryIDCollection As String)
         If TypeOf itm Is Outlook.MailItem Then
             Set mail = itm
 
-            ' כאן מגדירים איזה מיילים יאושרו אוטומטית
-            ' לדוגמה: כל מייל שהנושא שלו מכיל CHG (CHG0438028 וכו')
+            ' *** כאן מגדירים איזה מייל יאושר אוטומטית ***
+            ' בדוגמה: כל מייל שהנושא שלו מכיל CHG
             If InStr(mail.Subject, "CHG") > 0 Then
+                ' אפשר להוסיף גם תנאי על השולח אם תרצה
 
-                g_AutoApprovalInProgress = True
                 mail.Display              ' פותח את המייל
                 ClickApprovalLink mail    ' לוחץ על הלינק "לאישור הבקשה"
             End If
@@ -47,36 +46,43 @@ Private Sub ClickApprovalLink(ByVal mail As Outlook.MailItem)
 
     countLinks = links.Count
 
-    ' אם יש לפחות 2 לינקים – לוחצים על השני
+    ' דיבוג – פעם ראשונה שווה להשאיר:
+    'MsgBox "נמצאו " & countLinks & " לינקים במייל"
+
     If countLinks >= 2 Then
-        links(2).Follow   ' הלינק האמצעי: "לאישור הבקשה"
+        links(2).Follow   ' הלינק האמצעי – "לאישור הבקשה"
     End If
 
 ExitPoint:
 End Sub
 
-' כשנפתח חלון המייל שנוצר מהלינק – שולחים אותו אוטומטית
+' כל פעם שנפתח חלון מייל חדש – נבדוק אם זה מייל האישור שלנו
 Private Sub objInspectors_NewInspector(ByVal Inspector As Outlook.Inspector)
     Dim itm As Object
     Dim mail As Outlook.MailItem
 
     On Error GoTo ExitPoint
 
-    If g_AutoApprovalInProgress = False Then Exit Sub
-
     Set itm = Inspector.CurrentItem
     If TypeOf itm Is Outlook.MailItem Then
         Set mail = itm
 
-        ' לוודא שזה באמת מייל האישור לפני שליחה:
-        If InStr(mail.Subject, "- approve") > 0 And _
-           InStr(mail.To, "Auto_SN") > 0 Then
+        ' דיבוג – לראות שהגענו לכאן:
+        'MsgBox "New mail window: " & mail.Subject & vbCrLf & "To: " & mail.To
 
-            mail.Send   ' שליחה אוטומטית
+        ' שולחים אוטומטית רק אם:
+        ' 1. הנושא מכיל CHG
+        ' 2. וגם המילה approve
+        ' 3. והשדה To מכיל Auto_SN
+        ' 4. והגוף מכיל Ref:MSG (כמו אצלך)
+        If InStr(mail.Subject, "CHG") > 0 _
+           And InStr(mail.Subject, "approve") > 0 _
+           And InStr(mail.To, "Auto_SN") > 0 _
+           And InStr(mail.Body, "Ref:MSG") > 0 Then
+
+            mail.Send
         End If
     End If
-
-    g_AutoApprovalInProgress = False
 
 ExitPoint:
 End Sub
