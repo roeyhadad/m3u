@@ -22,26 +22,22 @@ Private Sub Application_NewMailEx(ByVal EntryIDCollection As String)
         If TypeOf itm Is Outlook.MailItem Then
             Set mail = itm
 
-            ' *** כאן מגדירים מה נחשב "מייל מתאים" ***
-            ' לדוגמה: כל מייל שהנושא שלו מכיל CHG (כמו CHG0438028)
+            ' כאן מגדירים איזה מיילים יאושרו אוטומטית
+            ' לדוגמה: כל מייל שהנושא שלו מכיל CHG (CHG0438028 וכו')
             If InStr(mail.Subject, "CHG") > 0 Then
 
-                ' דיבוג – אפשר להשאיר בהתחלה:
-                'MsgBox "זוהה מייל מתאים: " & mail.Subject, vbInformation, "Match"
-
                 g_AutoApprovalInProgress = True
-                mail.Display
-                ClickApprovalLink mail   ' <<< כאן כבר יש פונקציה מוגדרת למטה
+                mail.Display              ' פותח את המייל
+                ClickApprovalLink mail    ' לוחץ על הלינק "לאישור הבקשה"
             End If
         End If
     Next i
 End Sub
 
-' לוחץ על הלינק התחתון (האחרון) במייל – זה של "לאישור הבקשה"
+' לוחץ על הלינק האמצעי ("לאישור הבקשה") – 2 מתוך 3
 Private Sub ClickApprovalLink(ByVal mail As Outlook.MailItem)
     Dim doc As Object
     Dim links As Object
-    Dim h As Object
     Dim countLinks As Long
 
     On Error GoTo ExitPoint
@@ -51,18 +47,15 @@ Private Sub ClickApprovalLink(ByVal mail As Outlook.MailItem)
 
     countLinks = links.Count
 
-    ' דיבוג – לראות כמה לינקים יש:
-    'MsgBox "נמצאו " & countLinks & " לינקים במייל", vbInformation, "Links"
-
-    If countLinks >= 1 Then
-        ' נניח שהלינק האחרון הוא "לאישור הבקשה"
-        links(countLinks).Follow
+    ' אם יש לפחות 2 לינקים – לוחצים על השני
+    If countLinks >= 2 Then
+        links(2).Follow   ' הלינק האמצעי: "לאישור הבקשה"
     End If
 
 ExitPoint:
 End Sub
 
-' רץ כל פעם שנפתח חלון מייל חדש (למשל זה שנוצר מהקליק על הלינק)
+' כשנפתח חלון המייל שנוצר מהלינק – שולחים אותו אוטומטית
 Private Sub objInspectors_NewInspector(ByVal Inspector As Outlook.Inspector)
     Dim itm As Object
     Dim mail As Outlook.MailItem
@@ -75,14 +68,11 @@ Private Sub objInspectors_NewInspector(ByVal Inspector As Outlook.Inspector)
     If TypeOf itm Is Outlook.MailItem Then
         Set mail = itm
 
-        ' דיבוג – לראות מה הנושא ומה הכתובת
-        'MsgBox "נפתח מייל חדש: " & mail.Subject & vbCrLf & "To: " & mail.To
-
-        ' ודא שזה באמת מייל האישור לפני שליחה:
+        ' לוודא שזה באמת מייל האישור לפני שליחה:
         If InStr(mail.Subject, "- approve") > 0 And _
            InStr(mail.To, "Auto_SN") > 0 Then
 
-            mail.Send
+            mail.Send   ' שליחה אוטומטית
         End If
     End If
 
