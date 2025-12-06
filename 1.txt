@@ -1,1 +1,36 @@
 
+Private Sub Application_NewMailEx(ByVal EntryIDCollection As String)
+    Dim itm As Object
+    Dim mail As Outlook.MailItem
+
+    ' מביא את האובייקט של המייל שהתקבל
+    Set itm = Application.Session.GetItemFromID(EntryIDCollection)
+
+    If TypeOf itm Is Outlook.MailItem Then
+        Set mail = itm
+
+        ' תנאים לזיהוי המייל שאתה רוצה לאשר:
+        ' אפשר לפי שולח, נושא, טקסט בגוף וכו'
+        If InStr(mail.Subject, "בקשת אישור") > 0 Then
+            ' קורא לפונקציה ששולחת את האישור
+            Call SendAutoApproval(mail)
+        End If
+    End If
+End Sub
+
+Private Sub SendAutoApproval(ByVal srcMail As Outlook.MailItem)
+    Dim m As Outlook.MailItem
+
+    ' אם מה שהלינק עושה זה בעצם Reply – אפשר להשתמש בזה:
+    'Set m = srcMail.Reply
+
+    ' אם הלינק יוצר מייל חדש לכתובת מסוימת – פשוט נבנה אותו ידנית:
+    Set m = Application.CreateItem(olMailItem)
+    With m
+        .To = "workflow@yourcompany.com"      ' << להחליף לכתובת שאליה נשלח האישור
+        .Subject = "אישור לבקשה XXX"         ' << להחליף לנושא שצריך
+        .Body = "אני מאשר את הבקשה." & vbCrLf & vbCrLf & _
+                "נשלח אוטומטית."
+        .Send    ' שולח אוטומטית בלי לפתוח חלון
+    End With
+End Sub
