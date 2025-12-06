@@ -6,6 +6,7 @@ Private Sub Application_NewMailEx(ByVal EntryIDCollection As String)
     Dim i As Long
     Dim itm As Object
     Dim mail As Outlook.MailItem
+    Dim senderAddr As String
 
     arrIDs = Split(EntryIDCollection, ",")
 
@@ -14,17 +15,44 @@ Private Sub Application_NewMailEx(ByVal EntryIDCollection As String)
         If TypeOf itm Is Outlook.MailItem Then
             Set mail = itm
 
-            ' Filter: only change-approval mails
-            ' (subject contains "CHG")
-            If InStr(mail.Subject, "CHG") > 0 Then
+            ' Get sender SMTP address (works with Exchange as well)
+            senderAddr = LCase(GetSenderSmtpAddress(mail))
+
+            ' Filter:
+            ' 1) subject contains "CHG"
+            ' 2) mail is from specific sender
+            If InStr(mail.Subject, "CHG") > 0 _
+               And senderAddr = "change.system@bankleumi.co.il" Then   ' <<< CHANGE THIS
+
                 AutoApprove mail
             End If
         End If
     Next i
 End Sub
 
-' Reads the 2nd hyperlink ("לאישור הבקשה"),
-' parses the mailto: and sends the approval mail automatically
+' Return sender SMTP address in a robust way
+Private Function GetSenderSmtpAddress(ByVal mail As Outlook.MailItem) As String
+    Dim addr As String
+    Dim exch As Outlook.ExchangeUser
+
+    On Error Resume Next
+
+    If Not mail.Sender Is Nothing Then
+        Set exch = mail.Sender.GetExchangeUser
+        If Not exch Is Nothing Then
+            addr = exch.PrimarySmtpAddress
+        Else
+            addr = mail.SenderEmailAddress
+        End If
+    Else
+        addr = mail.SenderEmailAddress
+    End If
+
+    On Error GoTo 0
+    GetSenderSmtpAddress = addr
+End Function
+
+' Read 2nd hyperlink, parse its mailto:, and send approval mail
 Private Sub AutoApprove(ByVal mail As Outlook.MailItem)
     Dim doc As Object
     Dim links As Object
@@ -33,16 +61,17 @@ Private Sub AutoApprove(ByVal mail As Outlook.MailItem)
 
     On Error GoTo ExitPoint
 
-    mail.Display    ' needed so WordEditor exists
+    ' Need to display so WordEditor is available
+    mail.Display
 
     Set doc = mail.GetInspector.WordEditor
     Set links = doc.Hyperlinks
 
-    ' we expect at least 2 links; 2nd one is "Approve request"
+    ' We expect at least 2 links: the 2nd is "Approve request"
     If links.Count < 2 Then GoTo ExitPoint
 
     Set h = links(2)
-    addr = h.Address           ' should be like: mailto:Auto_SN?subject=...&body=...
+    addr = h.Address           ' Example: mailto:Auto_SN?subject=...&body=...
 
     If LCase(Left$(addr, 7)) <> "mailto:" Then GoTo ExitPoint
 
@@ -63,7 +92,7 @@ Private Sub SendFromMailto(ByVal mailtoUrl As String)
     Dim subj As String, body As String
     Dim m As Outlook.MailItem
 
-    ' strip "mailto:"
+    ' Strip "mailto:"
     rest = Mid$(mailtoUrl, 8)
 
     pos = InStr(rest, "?")
