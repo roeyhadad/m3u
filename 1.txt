@@ -1,36 +1,90 @@
+Option Explicit
 
+Dim WithEvents objInspectors As Outlook.Inspectors
+Dim g_AutoApprovalInProgress As Boolean
+
+' רץ כש-Outlook עולה
+Private Sub Application_Startup()
+    Set objInspectors = Application.Inspectors
+End Sub
+
+' רץ על כל מייל חדש שנכנס
 Private Sub Application_NewMailEx(ByVal EntryIDCollection As String)
     Dim itm As Object
     Dim mail As Outlook.MailItem
 
-    ' מביא את האובייקט של המייל שהתקבל
+    On Error GoTo ExitPoint
+
     Set itm = Application.Session.GetItemFromID(EntryIDCollection)
 
     If TypeOf itm Is Outlook.MailItem Then
         Set mail = itm
 
-        ' תנאים לזיהוי המייל שאתה רוצה לאשר:
-        ' אפשר לפי שולח, נושא, טקסט בגוף וכו'
-        If InStr(mail.Subject, "בקשת אישור") > 0 Then
-            ' קורא לפונקציה ששולחת את האישור
-            Call SendAutoApproval(mail)
+        ' תנאי לזיהוי המייל הרלוונטי – תוכל לכוונן לפי Subject/Body
+        ' למשל, אם תמיד יש "בקשה מספר CHG" בגוף:
+        If InStr(mail.Body, "לאישור הבקשה") > 0 Then
+
+            g_AutoApprovalInProgress = True   ' מסמן שאנחנו בתהליך אוטומטי
+
+            ' פותח את המייל כדי שנוכל להגיע להייפרלינקים
+            mail.Display
+
+            ' לוחץ על הלינק "לאישור הבקשה"
+            Call ClickApprovalLink(mail)
         End If
     End If
+
+ExitPoint:
+    Exit Sub
 End Sub
 
-Private Sub SendAutoApproval(ByVal srcMail As Outlook.MailItem)
-    Dim m As Outlook.MailItem
+' לוחץ על ההייפרלינק עם הטקסט "לאישור הבקשה"
+Private Sub ClickApprovalLink(ByVal mail As Outlook.MailItem)
+    Dim doc As Object
+    Dim links As Object
+    Dim h As Object
 
-    ' אם מה שהלינק עושה זה בעצם Reply – אפשר להשתמש בזה:
-    'Set m = srcMail.Reply
+    On Error GoTo ExitPoint
 
-    ' אם הלינק יוצר מייל חדש לכתובת מסוימת – פשוט נבנה אותו ידנית:
-    Set m = Application.CreateItem(olMailItem)
-    With m
-        .To = "workflow@yourcompany.com"      ' << להחליף לכתובת שאליה נשלח האישור
-        .Subject = "אישור לבקשה XXX"         ' << להחליף לנושא שצריך
-        .Body = "אני מאשר את הבקשה." & vbCrLf & vbCrLf & _
-                "נשלח אוטומטית."
-        .Send    ' שולח אוטומטית בלי לפתוח חלון
-    End With
+    Set doc = mail.GetInspector.WordEditor
+    Set links = doc.Hyperlinks
+
+    For Each h In links
+        ' אם טקסט ההייפרלינק הוא "לאישור הבקשה" (או חלק ממנו)
+        If InStr(h.TextToDisplay, "אישור הבקשה") > 0 Then
+            h.Follow    ' כמו לחיצה על הלינק
+            Exit For
+        End If
+    Next h
+
+ExitPoint:
+    Exit Sub
+End Sub
+
+' רץ כל פעם שנפתח חלון חדש (Inspector חדש)
+Private Sub objInspectors_NewInspector(ByVal Inspector As Outlook.Inspector)
+    Dim itm As Object
+    Dim mail As Outlook.MailItem
+
+    On Error GoTo ExitPoint
+
+    ' נטפל רק אם אנחנו בתהליך האוטומטי
+    If g_AutoApprovalInProgress = False Then Exit Sub
+
+    Set itm = Inspector.CurrentItem
+    If TypeOf itm Is Outlook.MailItem Then
+        Set mail = itm
+
+        ' לוודא שזה באמת מייל האישור (הנושא כמו בצילום: Re:CHG... - approve)
+        If InStr(mail.Subject, "- approve") > 0 Then
+            ' שולח את המייל אוטומטית
+            mail.Send
+        End If
+    End If
+
+    ' מסיים את הסשן של האוטומציה
+    g_AutoApprovalInProgress = False
+
+ExitPoint:
+    Exit Sub
 End Sub
