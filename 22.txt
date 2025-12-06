@@ -1,27 +1,11 @@
 Option Explicit
 
-Dim WithEvents objInspectors As Outlook.Inspectors
-
-' מאתחל את objInspectors – נקרא מזה וממקומות נוספים
-Private Sub InitInspectors()
-    If objInspectors Is Nothing Then
-        Set objInspectors = Application.Inspectors
-    End If
-End Sub
-
-' רץ כש-Outlook עולה
-Private Sub Application_Startup()
-    InitInspectors
-End Sub
-
 ' רץ על כל מייל חדש שנכנס
 Private Sub Application_NewMailEx(ByVal EntryIDCollection As String)
     Dim arrIDs() As String
     Dim i As Long
     Dim itm As Object
     Dim mail As Outlook.MailItem
-
-    InitInspectors       ' לוודא שהאירוע של Inspectors מחובר
 
     arrIDs = Split(EntryIDCollection, ",")
 
@@ -30,65 +14,48 @@ Private Sub Application_NewMailEx(ByVal EntryIDCollection As String)
         If TypeOf itm Is Outlook.MailItem Then
             Set mail = itm
 
-            ' כאן מגדירים איזה מייל יאושר אוטומטית
+            ' כאן בוחרים איזה מיילים יאושרו אוטומטית
             ' בדוגמה: כל מייל שהנושא שלו מכיל CHG
             If InStr(mail.Subject, "CHG") > 0 Then
-
-                ' דיבוג – לראות שהגענו לכאן
-                'MsgBox "מייל זוהה לאישור: " & mail.Subject, vbInformation, "Debug-NewMail"
-
-                mail.Display              ' פותח את המייל
-                ClickApprovalLink mail    ' לוחץ על הלינק "לאישור הבקשה"
+                mail.Display                ' פותח את המייל
+                ApproveChange mail          ' לוחץ על הלינק ושולח
             End If
         End If
     Next i
 End Sub
 
-' לוחץ על הלינק האמצעי ("לאישור הבקשה") – 2 מתוך 3
-Private Sub ClickApprovalLink(ByVal mail As Outlook.MailItem)
+Private Sub ApproveChange(ByVal mail As Outlook.MailItem)
     Dim doc As Object
     Dim links As Object
     Dim countLinks As Long
+    Dim insp As Outlook.Inspector
+    Dim replyMail As Outlook.MailItem
 
     On Error GoTo ExitPoint
 
+    ' להגיע ללינקים במייל
     Set doc = mail.GetInspector.WordEditor
     Set links = doc.Hyperlinks
-
     countLinks = links.Count
 
-    ' דיבוג: פעם אחת אפשר להפעיל
-    'MsgBox "נמצאו " & countLinks & " לינקים במייל", vbInformation, "Debug-Links"
-
+    ' נניח שהלינק השני מתוך שלושה הוא "לאישור הבקשה"
     If countLinks >= 2 Then
-        links(2).Follow   ' הלינק האמצעי – "לאישור הבקשה"
-    End If
+        links(2).Follow      ' לוחץ על "לאישור הבקשה"
+        DoEvents             ' נותן לחלון החדש להיפתח
 
-ExitPoint:
-End Sub
+        Set insp = Application.ActiveInspector
+        If Not insp Is Nothing Then
+            If TypeOf insp.CurrentItem Is Outlook.MailItem Then
+                Set replyMail = insp.CurrentItem
 
-' כל פעם שנפתח חלון מייל חדש – גם המייל שנוצר מהלינק
-Private Sub objInspectors_NewInspector(ByVal Inspector As Outlook.Inspector)
-    Dim itm As Object
-    Dim mail As Outlook.MailItem
+                ' ביטחון: לוודא שזה באמת מייל האישור
+                If InStr(replyMail.Subject, "CHG") > 0 _
+                   And InStr(replyMail.Subject, "approve") > 0 _
+                   And InStr(replyMail.To, "Auto_SN") > 0 Then
 
-    On Error GoTo ExitPoint
-
-    Set itm = Inspector.CurrentItem
-    If TypeOf itm Is Outlook.MailItem Then
-        Set mail = itm
-
-        ' דיבוג – מאוד חשוב עכשיו:
-        MsgBox "נפתח חלון מייל חדש:" & vbCrLf & _
-               "Subject: " & mail.Subject & vbCrLf & _
-               "To: " & mail.To, vbInformation, "Debug-NewInspector"
-
-        ' נשלח אוטומטית כל מייל שהנושא שלו מכיל גם CHG וגם approve
-        ' זה מספיק ייחודי כדי לא לפגוע במיילים רגילים
-        If InStr(mail.Subject, "CHG") > 0 And _
-           InStr(mail.Subject, "approve") > 0 Then
-
-            mail.Send
+                    replyMail.Send   ' שליחה אוטומטית
+                End If
+            End If
         End If
     End If
 
