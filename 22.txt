@@ -1,3 +1,32 @@
+Option Explicit
+
+' רץ על כל מייל חדש שנכנס
+Private Sub Application_NewMailEx(ByVal EntryIDCollection As String)
+    Dim arrIDs() As String
+    Dim i As Long
+    Dim itm As Object
+    Dim mail As Outlook.MailItem
+
+    arrIDs = Split(EntryIDCollection, ",")
+
+    For i = LBound(arrIDs) To UBound(arrIDs)
+        Set itm = Application.Session.GetItemFromID(arrIDs(i))
+        If TypeOf itm Is Outlook.MailItem Then
+            Set mail = itm
+
+            ' מסננים רק מיילים שיש בהם CHG בכותרת
+            If InStr(mail.Subject, "CHG") > 0 Then
+                ' דיבוג – אם אתה רוצה לראות שזה רץ, בטל את ההערה:
+                'MsgBox "זוהה מייל לאישור: " & mail.Subject, vbInformation, "Debug"
+
+                mail.Display
+                DoEvents
+                Call ApproveChange(mail)
+            End If
+        End If
+    Next i
+End Sub
+
 Private Sub ApproveChange(ByVal mail As Outlook.MailItem)
     Dim doc As Object
     Dim links As Object
