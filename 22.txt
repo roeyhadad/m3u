@@ -1,3 +1,14 @@
+Option Explicit
+
+Dim WithEvents objInspectors As Outlook.Inspectors
+Dim g_AutoApprovalInProgress As Boolean
+
+' רץ כש-Outlook עולה
+Private Sub Application_Startup()
+    Set objInspectors = Application.Inspectors
+End Sub
+
+' רץ על כל מייל חדש שנכנס
 Private Sub Application_NewMailEx(ByVal EntryIDCollection As String)
     Dim arrIDs() As String
     Dim i As Long
@@ -11,19 +22,71 @@ Private Sub Application_NewMailEx(ByVal EntryIDCollection As String)
         If TypeOf itm Is Outlook.MailItem Then
             Set mail = itm
 
-            ' נבדוק רק על המיילים שמעניינים אותנו
-            If InStr(mail.Body, "לאישור הבקשה") > 0 And _
-               InStr(mail.Body, "גיל בדוסה") > 0 Then
+            ' *** כאן מגדירים מה נחשב "מייל מתאים" ***
+            ' לדוגמה: כל מייל שהנושא שלו מכיל CHG (כמו CHG0438028)
+            If InStr(mail.Subject, "CHG") > 0 Then
 
-                MsgBox "זוהה מייל מתאים: " & mail.Subject, vbInformation, "Match"
+                ' דיבוג – אפשר להשאיר בהתחלה:
+                'MsgBox "זוהה מייל מתאים: " & mail.Subject, vbInformation, "Match"
 
                 g_AutoApprovalInProgress = True
                 mail.Display
-                ClickApprovalLink mail
-            Else
-                ' דיבוג – לראות למה לא נכנס:
-                'MsgBox "מייל לא מתאים: " & mail.Subject, vbInformation, "No Match"
+                ClickApprovalLink mail   ' <<< כאן כבר יש פונקציה מוגדרת למטה
             End If
         End If
     Next i
+End Sub
+
+' לוחץ על הלינק התחתון (האחרון) במייל – זה של "לאישור הבקשה"
+Private Sub ClickApprovalLink(ByVal mail As Outlook.MailItem)
+    Dim doc As Object
+    Dim links As Object
+    Dim h As Object
+    Dim countLinks As Long
+
+    On Error GoTo ExitPoint
+
+    Set doc = mail.GetInspector.WordEditor
+    Set links = doc.Hyperlinks
+
+    countLinks = links.Count
+
+    ' דיבוג – לראות כמה לינקים יש:
+    'MsgBox "נמצאו " & countLinks & " לינקים במייל", vbInformation, "Links"
+
+    If countLinks >= 1 Then
+        ' נניח שהלינק האחרון הוא "לאישור הבקשה"
+        links(countLinks).Follow
+    End If
+
+ExitPoint:
+End Sub
+
+' רץ כל פעם שנפתח חלון מייל חדש (למשל זה שנוצר מהקליק על הלינק)
+Private Sub objInspectors_NewInspector(ByVal Inspector As Outlook.Inspector)
+    Dim itm As Object
+    Dim mail As Outlook.MailItem
+
+    On Error GoTo ExitPoint
+
+    If g_AutoApprovalInProgress = False Then Exit Sub
+
+    Set itm = Inspector.CurrentItem
+    If TypeOf itm Is Outlook.MailItem Then
+        Set mail = itm
+
+        ' דיבוג – לראות מה הנושא ומה הכתובת
+        'MsgBox "נפתח מייל חדש: " & mail.Subject & vbCrLf & "To: " & mail.To
+
+        ' ודא שזה באמת מייל האישור לפני שליחה:
+        If InStr(mail.Subject, "- approve") > 0 And _
+           InStr(mail.To, "Auto_SN") > 0 Then
+
+            mail.Send
+        End If
+    End If
+
+    g_AutoApprovalInProgress = False
+
+ExitPoint:
 End Sub
