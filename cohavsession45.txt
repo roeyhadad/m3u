@@ -1,0 +1,60 @@
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<html>
+	<head>
+		<title></title>
+		<meta name="GENERATOR" content="Microsoft Visual Studio .NET 7.1">
+		<meta http-equiv="Content-Type" content="text/html; charset=windows-1255">
+				
+		<script language="javascript">
+		
+			function wSet()
+			{
+				var sCookie;
+				var e = document.getElementById("cList");
+				
+				sCookie = "starm="+ e.options[e.selectedIndex].value +";path=/;domain=.bankleumi.co.il";
+				document.cookie = sCookie;
+				
+					document.location = "https://hb2.bankleumi.co.il/H/Login.html";
+				
+				
+			}	
+		
+			
+	
+		</script>
+	
+	<script>var __uzdbm_1 = "247bffab-b2ec-47bc-8b03-17ecfb00c2fe";var __uzdbm_2 = "YmVjMzM2MjQtY2U2ei00NzhmLTkzMWYtNTdkNjMzYzMyZTk5JDIwLjIxNy4yMDAuMjI3";var __uzdbm_3 = "7f900052a53179-791f-42f0-ab97-5aa4304413cd18-175597081924515816026470-002f0e6b07184ef6c62256";var __uzdbm_4 = "false";var __uzdbm_5 = "uzmx";var __uzdbm_6 = "7f900073dc5e2b-fa65-45c7-ae29-25bdf907394519-175597081924515816026470-0cc91d8af6a96beb271";var __uzdbm_7 = "bankleumi.co.il";</script> <script>(function(w, d, e, u, c, g, a, b){ w["SSJSConnectorObj"] = {ss_cid : c, domain_info: "auto"}; a = d.createElement(e); a.async = true; a.src = u; b = d.getElementsByTagName(e)[0]; b.parentNode.insertBefore(a, b); })(window,document,"script","https://cdn.perfdrive.com/aperture/aperture.js","ce71","ssConf");</script></head>
+	<BODY">
+        <input type=button value="set server " onclick="wSet();">
+	<input type=button value="read cookie" onclick="alert(document.cookie);">
+               <select id="cList">
+  		
+		<option value="83A9F" > Web45-01</option>
+		<option value="84A3K" > Web45-02</option>
+		<option value="83A9H" > Web45-03</option>
+		<option value="84A3M" > Web45-04</option>
+		<option value="83A9J" > Web45-05</option>
+		<option value="84A3N" > Web45-06</option>
+		<option value="83A9M" > Web45-07</option>
+		<option value="84A3R" > Web45-08</option> 
+		<option value="83A9N" > Web45-09</option>
+		<option value="84A3W" > Web45-10</option>
+		<option value="83A9O" > Web45-11</option>
+                            <option value="84A3X" > Web45-12</option>
+                            <option value="78A1K" > Web45-13</option>
+		<option value="79A0D" > Web45-14</option>
+		<option value="78A1M" > Web45-15</option>
+		<option value="79A0P" > Web45-16</option>
+		<option value="83A0E" > Web45-17</option>
+		<option value="83A0F" > Web45-18</option>
+                            <option value="83A0Q" > Web45-19</option>
+                            <option value="83A0P" > Web45-20</option>
+                            
+
+                </select>
+	</BODY>
+	</HTML>
