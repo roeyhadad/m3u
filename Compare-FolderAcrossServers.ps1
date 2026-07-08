@@ -132,10 +132,10 @@ $compareScript = {
 
         # גזירת prefix/suffix משותף
         $pre = 0
-        while ($pre -lt $m -and $pre -lt $n -and ($srcLines[$pre] -ceq $dstLines[$pre])) { $pre++ }
+        while ($pre -lt $m -and $pre -lt $n -and ([string]::CompareOrdinal($srcLines[$pre], $dstLines[$pre]) -eq 0)) { $pre++ }
         $suf = 0
         while ($suf -lt ($m-$pre) -and $suf -lt ($n-$pre) -and
-               ($srcLines[$m-1-$suf] -ceq $dstLines[$n-1-$suf])) { $suf++ }
+               ([string]::CompareOrdinal($srcLines[$m-1-$suf], $dstLines[$n-1-$suf]) -eq 0)) { $suf++ }
 
         $srcMidEnd = $m - 1 - $suf; $dstMidEnd = $n - 1 - $suf
         $srcMid = if ($pre -le $srcMidEnd) { @($srcLines[$pre..$srcMidEnd]) } else { @() }
@@ -151,7 +151,7 @@ $compareScript = {
         for ($k = 0; $k -le $mm; $k++) { $dp[$k] = New-Object 'int[]' ($nn+1) }
         for ($i = $mm-1; $i -ge 0; $i--) {
             for ($j = $nn-1; $j -ge 0; $j--) {
-                if ($srcMid[$i] -ceq $dstMid[$j]) {
+                if ([string]::CompareOrdinal($srcMid[$i], $dstMid[$j]) -eq 0) {
                     $dp[$i][$j] = 1 + $dp[$i+1][$j+1]
                 } else {
                     $lv = $dp[$i+1][$j]; $rv = $dp[$i][$j+1]
@@ -165,7 +165,7 @@ $compareScript = {
         for ($k = 0; $k -lt $pre; $k++) { $ops.Add([PSCustomObject]@{Op='eq';Text=$srcLines[$k]}) }
         $i = 0; $j = 0
         while ($i -lt $mm -or $j -lt $nn) {
-            if ($i -lt $mm -and $j -lt $nn -and ($srcMid[$i] -ceq $dstMid[$j])) {
+            if ($i -lt $mm -and $j -lt $nn -and ([string]::CompareOrdinal($srcMid[$i], $dstMid[$j]) -eq 0)) {
                 $ops.Add([PSCustomObject]@{Op='eq';  Text=$srcMid[$i]}); $i++; $j++
             } elseif ($j -lt $nn -and ($i -ge $mm -or $dp[$i][$j+1] -gt $dp[$i+1][$j])) {
                 $ops.Add([PSCustomObject]@{Op='add'; Text=$dstMid[$j]}); $j++
@@ -177,7 +177,16 @@ $compareScript = {
 
         # סינון — רק שורות עם שינוי
         $changed = @($ops | Where-Object { $_.Op -ne 'eq' })
-        if ($changed.Count -eq 0) { return "<em class='diff-ok'>&#10003; Content identical after normalization.</em>" }
+        if ($changed.Count -eq 0) {
+            # לא אמור לקרות עם השוואה Ordinal — אבל אם קרה, אל תשקר שהקבצים זהים
+            $firstDiff = -1
+            $minLen = [Math]::Min($srcText.Length, $dstText.Length)
+            for ($q = 0; $q -lt $minLen; $q++) { if ($srcText[$q] -ne $dstText[$q]) { $firstDiff = $q; break } }
+            if ($firstDiff -lt 0 -and $srcText.Length -ne $dstText.Length) { $firstDiff = $minLen }
+            $sc = if ($firstDiff -ge 0 -and $firstDiff -lt $srcText.Length) { 'U+{0:X4}' -f [int]$srcText[$firstDiff] } else { 'EOF' }
+            $dc = if ($firstDiff -ge 0 -and $firstDiff -lt $dstText.Length) { 'U+{0:X4}' -f [int]$dstText[$firstDiff] } else { 'EOF' }
+            return "<em class='diff-err'>Files differ only in invisible/control characters (e.g. NUL, zero-width). First difference at char index $firstDiff : source=$sc, target=$dc. Lengths: $($srcText.Length) / $($dstText.Length) chars.</em>"
+        }
 
         # סימון שורות להצגה (שינוי ± Context)
         $total = $ops.Count
@@ -326,7 +335,7 @@ $compareScript = {
                     $srcText = _Decode $sbytes
                     $dstText = _Decode $dbytes
 
-                    if ($srcText -ceq $dstText) {
+                    if ([string]::CompareOrdinal($srcText, $dstText) -eq 0) {
                         # תוכן זהה — רק BOM/CRLF שונה
                         $result.Identical++
                         continue
