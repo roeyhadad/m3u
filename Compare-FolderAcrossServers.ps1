@@ -138,8 +138,10 @@ $compareScript = {
                ([string]::CompareOrdinal($srcLines[$m-1-$suf], $dstLines[$n-1-$suf]) -eq 0)) { $suf++ }
 
         $srcMidEnd = $m - 1 - $suf; $dstMidEnd = $n - 1 - $suf
-        $srcMid = if ($pre -le $srcMidEnd) { @($srcLines[$pre..$srcMidEnd]) } else { @() }
-        $dstMid = if ($pre -le $dstMidEnd) { @($dstLines[$pre..$dstMidEnd]) } else { @() }
+        # חשוב: @( ) סביב ה-if — אחרת מערך של שורה אחת "נפרק" למחרוזת בודדת
+        # ואז $srcMid[$i] מחזיר תו בודד במקום שורה שלמה (באג ה-diff הריק)
+        $srcMid = @(if ($pre -le $srcMidEnd) { $srcLines[$pre..$srcMidEnd] })
+        $dstMid = @(if ($pre -le $dstMidEnd) { $dstLines[$pre..$dstMidEnd] })
         $mm = $srcMid.Count; $nn = $dstMid.Count
 
         if ($mm -eq 0 -and $nn -eq 0) {
